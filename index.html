@@ -1,0 +1,374 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meu Blog Tech</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+
+        body {
+            background-color: #fff;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        header {
+            background: linear-gradient(135deg, #6b46c1, #a3bffa);
+            height: 60vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        header::before {
+            content: '';
+            position: absolute;
+            width: 200px;
+            height: 200px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            top: -100px;
+            left: -100px;
+            z-index: 0;
+        }
+
+        header::after {
+            content: '';
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            bottom: -150px;
+            right: -150px;
+            z-index: 0;
+        }
+
+        header h1 {
+            font-size: 3rem;
+            color: #fff;
+            z-index: 1;
+        }
+
+        header p {
+            font-size: 1.2rem;
+            color: #e5e7eb;
+            margin-top: 1rem;
+            z-index: 1;
+        }
+
+        header .btn {
+            margin-top: 2rem;
+            padding: 0.75rem 1.5rem;
+            background-color: #fff;
+            color: #6b46c1;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            z-index: 1;
+        }
+
+        header .btn:hover {
+            background-color: #f3f4f6;
+        }
+
+        header .social-icons {
+            margin-top: 1rem;
+            z-index: 1;
+        }
+
+        header .social-icons a {
+            color: #fff;
+            margin: 0 0.5rem;
+            font-size: 1.2rem;
+            text-decoration: none;
+        }
+
+        .separator {
+            text-align: center;
+            padding: 2rem 0;
+            color: #6b46c1;
+        }
+
+        .separator::after {
+            content: 'o';
+            font-size: 2rem;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 2rem;
+            color: #2d3748;
+            margin: 2rem 0;
+        }
+
+        .section-subtitle {
+            text-align: center;
+            font-size: 1rem;
+            color: #718096;
+            margin-bottom: 2rem;
+        }
+
+        .cards-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+
+        .card {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 1.5rem;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card h3 {
+            font-size: 1.5rem;
+            color: #2d3748;
+            margin-bottom: 0.5rem;
+        }
+
+        .card p {
+            color: #718096;
+            margin-bottom: 1rem;
+        }
+
+        .card .read-more {
+            color: #6b46c1;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .card .read-more:hover {
+            text-decoration: underline;
+        }
+
+        .card .date {
+            font-size: 0.9rem;
+            color: #a0aec0;
+            margin-top: 1rem;
+        }
+
+        .see-all {
+            display: block;
+            text-align: center;
+            margin: 2rem auto;
+            color: #6b46c1;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .see-all:hover {
+            text-decoration: underline;
+        }
+
+        footer {
+            background-color: #2d3748;
+            color: #fff;
+            padding: 2rem;
+            text-align: center;
+            margin-top: 2rem;
+        }
+
+        footer .footer-section {
+            margin-bottom: 1rem;
+        }
+
+        footer h4 {
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        footer a {
+            color: #a0aec0;
+            text-decoration: none;
+            display: block;
+            margin: 0.25rem 0;
+        }
+
+        footer a:hover {
+            color: #fff;
+        }
+
+        footer .contact {
+            margin-top: 1rem;
+        }
+
+        footer .contact a {
+            color: #a0aec0;
+            margin: 0 0.5rem;
+            font-size: 1.2rem;
+        }
+
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 2rem;
+            }
+
+            header p {
+                font-size: 1rem;
+            }
+
+            .cards-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Meu Blog Tech</h1>
+        <p>Explorando o mundo da tecnologia através de artigos, tutoriais e reflexões sobre desenvolvimento e inovação.</p>
+        <button class="btn">Ver Artigos</button>
+        <div class="social-icons">
+            <a href="#">👍</a>
+            <a href="#">💬</a>
+            <a href="#">📧</a>
+        </div>
+    </header>
+
+    <div class="separator"></div>
+
+    <div class="section-title">Artigos em Destaque</div>
+    <div class="section-subtitle">Os artigos mais populares e recentes do blog, cobrindo temas essenciais do desenvolvimento moderno.</div>
+    <div class="cards-container">
+        <div class="card">
+            <h3>Construindo APIs RESTful com Node.js e Express</h3>
+            <p>Um guia completo sobre como criar APIs robustas e escaláveis usando Node.js e Express.</p>
+            <a href="#" class="read-more">Ler Artigo</a>
+            <div class="date">14/09/2024 - 8 min</div>
+        </div>
+        <div class="card">
+            <h3>React Hooks: Do Básico ao Avançado</h3>
+            <p>Explore os hooks do React e aprenda a usá-los para gerenciar o estado e a lógica.</p>
+            <a href="#" class="read-more">Ler Artigo</a>
+            <div class="date">09/09/2024 - 12 min</div>
+        </div>
+        <div class="card">
+            <h3>Deploy Automatizado com GitHub Actions</h3>
+            <p>Como configurar pipelines de CI/CD para automatizar o deploy de suas aplicações web.</p>
+            <a href="#" class="read-more">Ler Artigo</a>
+            <div class="date">04/09/2024 - 10 min</div>
+        </div>
+    </div>
+
+    <div class="section-title">Publicações Recentes</div>
+    <div class="section-subtitle">Fique por dentro das últimas tendências de tecnologia através dos meus artigos mais recentes.</div>
+    <div class="cards-container">
+        <div class="card">
+            <h3>TypeScript 5.0: Principais Novidades</h3>
+            <p>Explore as novas funcionalidades e melhorias de performance da versão 5.0 do TypeScript.</p>
+            <a href="#" class="read-more">Ler Mais</a>
+        </div>
+        <div class="card">
+            <h3>Microserviços com Docker e Kubernetes</h3>
+            <p>Como implementar uma arquitetura de microserviços robusta usando Docker e Kubernetes.</p>
+            <a href="#" class="read-more">Ler Mais</a>
+        </div>
+        <div class="card">
+            <h3>Testes E2E com Playwright</h3>
+            <p>Guia prático para implementar testes end-to-end para suas aplicações web modernas.</p>
+            <a href="#" class="read-more">Ler Mais</a>
+        </div>
+        <div class="card">
+            <h3>Performance em React: Otimização</h3>
+            <p>Técnicas avançadas para otimizar performance em aplicações React de grande escala.</p>
+            <a href="#" class="read-more">Ler Mais</a>
+        </div>
+        <div class="card">
+            <h3>GraphQL vs REST: Quando Usar Cada Um</h3>
+            <p>Análise comparativa entre GraphQL e REST API, com casos de uso práticos e recomendações.</p>
+            <a href="#" class="read-more">Ler Mais</a>
+        </div>
+        <div class="card">
+            <h3>Segurança em Aplicações Web</h3>
+            <p>Melhores práticas de segurança para proteger suas aplicações contra vulnerabilidades comuns.</p>
+            <a href="#" class="read-more">Ler Mais</a>
+        </div>
+    </div>
+    <a href="#" class="see-all">Ver todos os Artigos</a>
+
+    <footer>
+        <div class="footer-section">
+            <h4>Sobre o Blog</h4>
+            <p>Um espaço dedicado ao compartilhamento de conhecimento sobre tecnologia e inovação. Artigos e insights valiosos para desenvolvedores.</p>
+        </div>
+        <div class="footer-section">
+            <h4>Categorias</h4>
+            <a href="#">Frontend</a>
+            <a href="#">Backend</a>
+            <a href="#">DevOps</a>
+            <a href="#">Mobile</a>
+            <a href="#">Data Science</a>
+        </div>
+        <div class="footer-section contact">
+            <h4>Contato</h4>
+            <p>Gostou de algum artigo? Tem alguma sugestão? Entre em contato!</p>
+            <a href="#">👍</a>
+            <a href="#">💬</a>
+            <a href="#">📧</a>
+        </div>
+        <p>&copy; 2025 Meu Blog Tech. Todos os direitos reservados.</p>
+    </footer>
+</body>
+</html>
